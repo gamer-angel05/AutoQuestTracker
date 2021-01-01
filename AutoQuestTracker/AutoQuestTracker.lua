@@ -16,13 +16,15 @@ SlashCmdList["AUTOQUESTTRACKER"] = function(msg)
 		debug = true
 		AQT_PrintDebugMsg("Quests currently in quest log:")
 		for questIndex = 1, C_QuestLog.GetNumQuestLogEntries() do
-			local questTitle, isHeader, questId, isWorldQuest, isHidden = AQT_getQuestInfo(questIndex)
+			local questTitle, isHeader, questId, isWorldQuest, isHidden, isCalling, isOnMap, hasLocalPOI = AQT_getQuestInfo(questIndex)
 			if isHidden then
 				print(string.format("|cff707070[Hidden] %s (%s)", questTitle, tostring(questId)))
 			elseif isHeader then
 				print(string.format("[Header] %s", questTitle))
 			elseif isWorldQuest then
 				print(string.format("|cffC107f3[Wolrd Quest] %s (%s)", questTitle, tostring(questId)))
+			elseif isCalling then
+				print(string.format("[Calling quest] %s (%s) %s/%s", questTitle, tostring(questId), tostring(isOnMap), tostring(hasLocalPOI)))
 			else
 				print(string.format("|cfff2cb06%s (%s)", questTitle, tostring(questId)))
 			end
@@ -57,19 +59,18 @@ function AQT_UpdateQuestsForZone()
 	local questZone = nil
 	
 	for questIndex = 1, C_QuestLog.GetNumQuestLogEntries() do
-		local questTitle, isHeader, questId, isWorldQuest, isHidden = AQT_getQuestInfo(questIndex)
+		local questTitle, isHeader, questId, isWorldQuest, isHidden, isCalling, isOnMap, hasLocalPOI = AQT_getQuestInfo(questIndex)
 
 		if not isWorldQuest and not isHidden then
 			if isHeader then
 				questZone = questTitle
-			else	
-				if questZone == currentZone or questZone == minimapZone then
+			else
+				if questZone == currentZone or questZone == minimapZone or isOnMap or hasLocalPOI then
 					if C_QuestLog.GetQuestWatchType(questId) == nil then
 						AQT_ShowOrHideQuest(questIndex, questId, true)
 					end
 				elseif C_QuestLog.GetQuestWatchType(questId) == 0 then
 					AQT_ShowOrHideQuest(questIndex, questId, false)
-					
 				end
 			end
 		end
@@ -97,9 +98,12 @@ end
 --	 Quest Id
 --	 Whether the quest is a world quest
 --	 Whether the quest is hidden in the quest log
+--   Whether the quest is a calling quest
+--	 Whether the quest is on the map
+--	 Whether the quest has a local point of interest
 function AQT_getQuestInfo(index)
 	local quest = C_QuestLog.GetInfo(index)
-	return quest.title, quest.isHeader, quest.questID, C_QuestLog.IsWorldQuest(quest.questID), quest.isHidden
+	return quest.title, quest.isHeader, quest.questID, C_QuestLog.IsWorldQuest(quest.questID), quest.isHidden, C_QuestLog.IsQuestCalling(quest.questID), quest.isOnMap, quest.hasLocalPOI
 end
 
 AutoQuestTrackerFrame:SetScript("OnEvent", AQT_HandleEvent)
