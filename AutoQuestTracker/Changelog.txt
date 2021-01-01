@@ -1,5 +1,5 @@
 v1.5
-- Update for better support to detect quests that should appear on the map
+- Update for better filtering with new Shadowlands api.
 
 v1.4
 - Updated for Shadowlands
